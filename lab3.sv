@@ -7,7 +7,7 @@
 
 module lab3 (
     input logic CLOCK_50,        // 50 MHz clock
-    (* altera_attribute = "-name WEAK_PULL_UP_RESISTOR ON" *)
+    (* altera_attribute = "-name WEAK_PULL_UP_RESISTOR ON" *) // needed per rotary encoder
     input logic enc1_a, enc1_b,  // Encoder 1 signals
     input logic s1, s2,          // Push-buttons
     output logic [7:0] leds,     // 7-seg LED enables
@@ -37,13 +37,13 @@ module lab3 (
    // use count to divide clock and generate a 2 bit digit counter to determine which digit to display
 	always_ff @(posedge CLOCK_50) begin
 	   clk_div_count <= clk_div_count + 1'b1;
-	   digit <= clk_div_count[15:14];  // Now inside sequential block
+	   digit <= clk_div_count[15:14];  // Now inside sequential block // ***************** could be [17:16]
 	end
 
    // Select digit to display (disp_digit) from last 4 nibbles of freq
    always_comb begin
       case (digit)
-         2'b00: disp_digit = bcd_count[3:0];
+         2'b00: disp_digit = bcd_count[3:0]; // preferably, bcd_count, not freq
          2'b01: disp_digit = bcd_count[7:4]; 
          2'b10: disp_digit = bcd_count[11:8];
          2'b11: disp_digit = bcd_count[15:12];

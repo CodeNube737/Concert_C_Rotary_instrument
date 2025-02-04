@@ -5,6 +5,9 @@
 // Mikhail Rego
 // 2/1/2025
 /////////////////////////////////////////////////////////////////////////////////////////////
+// 2/4/2025
+// Edited: Mikhail Rego, adding debounce delay
+/////////////////////////////////////////////////////////////////////////////////////////////
 
 module tonegen 
    #( parameter FCLK ) (         // external (input) clock frequency, Hz. should be 50 MHz.
@@ -16,8 +19,10 @@ module tonegen
 
    logic [32:0] twiceFreq;  // continuously updated & assigned freq << 1 (logical left shift by 1)
    logic [31:0] count;      // counter initialized at zero
-	logic prev_onOff;			// state storage for edge-detection
-	logic mute;					// latch for onOff
+   logic prev_onOff;        // state storage for edge-detection
+   logic mute;              // latch for onOff
+   logic [19:0] debounce_counter; // counter for debounce delay
+   logic debounce_active;   // flag to indicate debounce in progress
 
    assign twiceFreq = freq << 1; // Simple assignment (combinational logic)
 
@@ -25,14 +30,26 @@ module tonegen
       if (!reset_n) begin
          count <= 0;
          spkr <= 0;
-			mute <= 0;
-			prev_onOff <=0;
+         mute <= 0;
+         prev_onOff <= 0;
+         debounce_counter <= 0;
+         debounce_active <= 0;
       end else begin
-         // Edge detection: Toggle mute only on rising edge of onOff
-         if (onOff && !prev_onOff) begin  
-            mute <= ~mute; // Toggle mute when button is pressed
+         // Debounce logic
+         if (onOff != prev_onOff && !debounce_active) begin
+            debounce_active <= 1;
+            debounce_counter <= 0;
+         end else if (debounce_active) begin
+            if (debounce_counter < 20'd1000000) begin // Delay for ~20ms (assuming 50 MHz clock)
+               debounce_counter <= debounce_counter + 1;
+            end else begin
+               debounce_active <= 0;
+               if (onOff && !prev_onOff) begin
+                  mute <= ~mute; // Toggle mute when button is pressed
+               end
+               prev_onOff <= onOff; // Store previous state of onOff
+            end
          end
-         prev_onOff <= onOff; // Store previous state of onOff
 
          if (count >= FCLK) begin
             count <= 0;
@@ -44,4 +61,3 @@ module tonegen
    end
 
 endmodule
-
