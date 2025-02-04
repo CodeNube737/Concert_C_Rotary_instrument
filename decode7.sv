@@ -3,6 +3,10 @@
 // 				It gives the proper output to turn-on specific leds so the 7-seg displays the char u want
 // Author: Mikhail Rego, with the help of open-AI
 // Date: 2025-01-20
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// 2/4/2025
+// Edited: Mikhail Rego, added digits a-f to the display
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 module decode7 (
   input  logic [3:0] num,			// 4-bit number (0-F)
@@ -20,12 +24,12 @@ always_comb begin
       4'h7: leds = 7'b0000111;	// Display the number 7 ...... displays the ctr-led instead of the top
       4'h8: leds = 7'b1111111;	// Display the number 8
       4'h9: leds = 7'b1101111;	// Display the number 9
-//      4'hA: leds = 8'b10001000;	// Display the letter A
-//      4'hB: leds = 8'b10000011;	// Display the letter b
-//      4'hC: leds = 8'b11000110;	// Display the letter C
-//      4'hD: leds = 8'b10100001;	// Display the letter d
-//      4'hE: leds = 8'b10000110;	// Display the letter E
-//      4'hF: leds = 8'b10001110;	// Display the letter F
+      4'ha: leds = 7'b1110111;	// Display the letter A
+      4'hb: leds = 7'b1111100;	// Display the letter b
+      4'hc: leds = 7'b0111001;	// Display the letter C
+      4'hd: leds = 7'b1011110;	// Display the letter d
+      4'he: leds = 7'b1111001;	// Display the letter E
+      4'h8: leds = 7'b1111111;	// Display the letter F
       default: leds = 8'b11111111; // All off
     endcase
   end
@@ -40,5 +44,5 @@ endmodule
  * xx1 xxxx (bot left)
  * x1x xxxx (top left)
  * 1xx xxxx (centre)
- * 1xxxxxxx (dp)
+ * 1xxxxxxx (dp) (8'b, not 7)
  */

@@ -4,6 +4,13 @@
 // Author: Mikhail Rego with the help of Verilog Expert gpt
 // Date: 2/2/2025
 /////////////////////////////////////////////////////////////////////////////////////////////
+// 02/04/2025
+// Edited: Mikhail Rego, to ensure ccw and cw turn with different counters.
+//		Currently, both cw and ccw share the same counter (pulse_count), 
+//		which causes conflicts when switching directions.
+// 	Code was also commented that existed only for 1, shared counter
+/////////////////////////////////////////////////////////////////////////////////////////////
+
 
 `define C_3 262 // Hz
 `define D_3 295
@@ -18,33 +25,38 @@ module enc2freq (
    input logic cw, ccw,            // Outputs from the lab2 encoder module
    output logic [31:0] freq,        // Output frequency
    input logic reset_n, clk         // Reset and clock
-   //logic idle;
 );
 
-   logic [2:0] note_index;   // 3-bit index (0 to 7) for the current note
-   logic [1:0] pulse_count;  // 2-bit counter (0 to 3) to track pulses before updating frequency
+   logic [2:0] note_index;    // 3-bit index (0 to 7) for the current note
+   logic [1:0] cw_count;      // 2-bit counter (0 to 3) for CW pulses
+   logic [1:0] ccw_count;     // 2-bit counter (0 to 3) for CCW pulses
 
    always_ff @(posedge clk or negedge reset_n) begin
       if (!reset_n) begin
-         note_index  <= 0;  // Start at C_3
-         pulse_count <= 0;  // Reset pulse count
+         note_index <= 'b0;   // Start at C_3
+         cw_count   <= 'b0;   // Reset CW pulse counter
+         ccw_count  <= 'b0;   // Reset CCW pulse counter
       end else begin
+         // Handle CW pulses
          if (cw) begin
-            if (pulse_count == 3) begin  // After 4 pulses (0,1,2,3 ? 4th pulse triggers update)
+            cw_count <= cw_count + 1;  // Increment CW pulse count
+				//ccw_count <= 0;  // Reset CCW counter when CW is detected
+            if (cw_count == 3) begin  // After 4 pulses (0,1,2,3 ? 4th pulse triggers update)
                if (note_index < 7) 
                   note_index <= note_index + 1; // Move up the scale
-               pulse_count <= 0;  // Reset counter after frequency change
-            end else begin
-               pulse_count <= pulse_count + 1;  // Increment pulse count
-            end
-         end else if (ccw) begin
-            if (pulse_count == 3) begin
+               //cw_count <= 0;  // Reset CW counter after update
+            end 
+         end
+
+         // Handle CCW pulses
+         if (ccw) begin            
+            ccw_count <= ccw_count + 1;  // Increment CCW pulse count
+				//cw_count <= 0;  // Reset CW counter when CCW is detected
+            if (ccw_count == 3) begin  // After 4 pulses (0,1,2,3 ? 4th pulse triggers update)
                if (note_index > 0) 
                   note_index <= note_index - 1; // Move down the scale
-               pulse_count <= 0;
-            end else begin
-               pulse_count <= pulse_count + 1;
-            end
+               //ccw_count <= 0;  // Reset CCW counter after update
+            end 
          end
       end
    end
@@ -65,4 +77,3 @@ module enc2freq (
    end
 
 endmodule
-
